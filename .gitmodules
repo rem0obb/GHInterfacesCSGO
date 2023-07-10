@@ -1,0 +1,6 @@
+[submodule "submodules/googletest"]
+	path = submodules/googletest
+	url = git@github.com:google/googletest
+[submodule "submodules/lief"]
+	path = submodules/lief
+	url = git@github.com:lief-project/LIEF.git
