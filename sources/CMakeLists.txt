@@ -6,8 +6,6 @@ cmake_minimum_required(VERSION 3.0.2)
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 # add subdirectory
-add_subdirectory( ../submodules/lief build/lief )
-
 
 # add executable and target libraries
 add_library( launcher_client SHARED LauncherClient.cpp)
