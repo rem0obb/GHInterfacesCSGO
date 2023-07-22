@@ -26,4 +26,4 @@ target_sources(launcher_client PRIVATE
 		${SOURCES}
 )
 
-target_link_libraries(launcher_client PRIVATE LIEF::LIEF )
+target_link_libraries(launcher_client PRIVATE )

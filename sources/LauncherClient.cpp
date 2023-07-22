@@ -10,12 +10,12 @@ extern "C"
 {
     static void (*LauncherMain_o)(int argc, const char **argv);
 
-    void hooks_teste()
+    void ThreadHooks()
     {
-        sleep(60);
+        sleep(TIMEOUT);
         std::cout << "[*] Instaling Hooks ..." << std::endl;
         GHooks hooks;
-        hooks.install();
+        hooks.Interface_VClient();
     }
 
     void LauncherMain(int argc, const char **argv)
@@ -29,7 +29,7 @@ extern "C"
             if (LauncherMain)
             {
                 LauncherMain_o = reinterpret_cast<void (*)(int argc, const char **argv)>(LauncherMain);
-                std::thread first(hooks_teste);
+                std::thread first(ThreadHooks);
                 LauncherMain_o(argc, argv);
             }
             dlclose(dl);

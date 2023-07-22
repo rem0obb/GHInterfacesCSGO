@@ -4,9 +4,8 @@
 #include <iostream>
 #include <stdint.h>
 
-GHInterfaces::GHInterfaces(const std::string _file, u_int64_t _vtable_address) : m_vtable_address(_vtable_address),
-                                                                                 m_file(_file),
-                                                                                 m_dl(dlopen(m_file.c_str(), RTLD_LAZY | RTLD_NOLOAD))
+GHInterfaces::GHInterfaces(const std::string _file) : m_file(_file),
+                                                      m_dl(dlopen(m_file.c_str(), RTLD_LAZY | RTLD_NOLOAD))
 {
     dladdr(m_dl, &m_info);
 }
@@ -15,14 +14,14 @@ GHInterfaces::~GHInterfaces()
 {
 }
 
-u_int64_t GHInterfaces::IndexFunctionOffsetVtable64(u_int64_t _function)
+u_int64_t GHInterfaces::IndexFunctionOffsetVtable64(u_int64_t _function, off_t _vtable_address)
 {
-    return (((_function - m_vtable_address) / 8) - 1);
+    return (((_function - _vtable_address) / 8) - 1);
 }
 
-u_int64_t GHInterfaces::IndexFunctionOffsetVtable32(u_int64_t _function)
+u_int64_t GHInterfaces::IndexFunctionOffsetVtable32(u_int64_t _function, off_t _vtable_address)
 {
-    return (((_function - m_vtable_address) / 4) - 1);
+    return (((_function - _vtable_address) / 4) - 1);
 }
 
 bool GHInterfaces::Memcmp(const uint8_t *_data, const std::vector<uint8_t> &_pattern, const std::vector<uint8_t> &_mask)
@@ -60,12 +59,46 @@ void *GHInterfaces::CreateInterfaceFN(const std::string _class)
 {
     if (m_dl)
     {
-        void *address = dlsym(m_dl, "CreateInterface");
+        // get InterfaceRegs pointer 1 attempt (better case)
+        void *create_interface = dlsym(m_dl, "s_pInterfaceRegs");
+        if (create_interface)
+        {
+            for (const InterfaceReg *current = *reinterpret_cast<InterfaceReg **>(create_interface); current; current = current->m_pNext)
+            {
+                if (std::string(current->m_pName).find(_class) != std::string::npos)
+                {
+                    std::cout << "[*] Found class " << _class << " Address " << current->m_pNext << std::endl;
+                    return current->m_CreateFn();
+                }
+            }
+        }
+        else
+        {
+            std::cout << "[*] Getting Interface 2 attempt " << std::endl;
+            void *create_interface = dlsym(m_dl, "CreateInterface");
 
+            static void *(*CreateInterfaceFn)(const char *pName, int *pReturnCode);
+
+            CreateInterfaceFn = reinterpret_cast<void *(*)(const char *pName, int *pReturnCode)>(create_interface);
+
+            void *CreateFn = CreateInterfaceFn(_class.c_str(), nullptr);
+            if (CreateFn != (void *)IFACE_FAILED)
+            {
+                std::cout << "[*] Found class " << _class << " Address " << CreateFn << std::endl;
+                return CreateFn;
+            }
+        }
+
+        std::cout << "[*]  Not found interface " << _class << std::endl;
         return nullptr;
     }
     else
     {
-        throw std::runtime_error("Error in opened file dl " + std::string(dlerror()));
+        throw std::runtime_error("[*] Error dl " + std::string(dlerror()));
     }
+}
+
+void* GHInterfaces::GetBaseAddress()
+{
+    return m_info.dli_fbase;
 }
