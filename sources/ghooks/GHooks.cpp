@@ -40,9 +40,9 @@ void sigtrap_handler(int signal)
 		std::cout << "[*] Register RAX/g_pClientMode = " << std::hex << g_pClientMode << std::endl;
 
 		uint64_t *vTable = *(uint64_t **)(g_pClientMode + 0x0); // get vtable class CHLClient
-		uintptr_t CreateMove = vTable[0];						// get pointer for function CreateMove
+		uintptr_t CreateMove = vTable[24];						// get pointer for function CreateMove
 
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < 10; i++)
 		{
 			printf("address=%p / %x\n", (CreateMove + i), *(unsigned char *)((CreateMove + i)));
 		}
