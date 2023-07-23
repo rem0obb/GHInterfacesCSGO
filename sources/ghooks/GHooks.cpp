@@ -14,7 +14,8 @@
 #include <ucontext.h>
 #include <libunwind.h>
 
-uintptr_t HudProcessInput;
+GHooks::ClientModeShared clientModeShared;
+GHooks::CHLClient chlClient;
 
 GHooks::GHooks()
 {
@@ -25,7 +26,7 @@ GHooks::~GHooks()
 }
 
 // Função de tratamento do sinal
-void sigtrap_handler(int sig, siginfo_t *info, void *ucontext)
+void GetPointerClientModeSharedVTABLE(int sig, siginfo_t *info, void *ucontext)
 {
 	if (sig == SIGTRAP)
 	{
@@ -40,13 +41,9 @@ void sigtrap_handler(int sig, siginfo_t *info, void *ucontext)
 
 		std::cout << "[*] pClientMode: " << std::hex << vTable << std::endl;
 
-		for (int i = 0; i < 10; i++)
-		{
-			printf("address=%p / %x\n", (vTable[25]) + i, *(unsigned char *)((vTable[25]) + i));
-		}
+		clientModeShared.CreateMove = vTable[25];
 
-
-		strncpy((char *)HudProcessInput + 35, "\xFF\xE2", 2); // recover bytes
+		strncpy((char *)chlClient.HudProcessInput + 35, "\xFF\xE2", 2); // recover bytes
 	}
 }
 
@@ -56,26 +53,28 @@ void GHooks::Interface_VClient()
 	void *vClient = inter.CreateInterfaceFN(CLIENT_DLL_INTERFACE_VERSION);
 
 	uint64_t *vTable = *(uint64_t **)(vClient + 0x0); // get vtable class CHLClient
-	HudProcessInput = vTable[10];					  // get pointer for function CHLClient::HudProcessInput
+
+	chlClient.HudProcessInput = vTable[10]; // get pointer for function CHLClient::HudProcessInput
 
 	long page_size = sysconf(_SC_PAGE_SIZE);
-
-	if (mprotect(ALIGN_ADDR(HudProcessInput), page_size, PROT_READ | PROT_WRITE | PROT_EXEC | PROT_NONE) != 0)
+	if (mprotect(ALIGN_ADDR(chlClient.HudProcessInput), page_size, PROT_READ | PROT_WRITE | PROT_EXEC | PROT_NONE) != 0)
 	{
 		perror("[*] mprotect error ");
 	}
 
-	struct sigaction sa;
-	sa.sa_flags = SA_SIGINFO;
-	sa.sa_sigaction = sigtrap_handler;
-	sigemptyset(&sa.sa_mask);
-
-	// Configura o tratador de sinal SIGTRAP
-	if (sigaction(SIGTRAP, &sa, nullptr) == -1)
+	// Get Pointer pClientMode
 	{
-		perror("sigaction");
-		return;
+		struct sigaction sa;
+		sa.sa_flags = SA_SIGINFO;
+		sa.sa_sigaction = GetPointerClientModeSharedVTABLE;
+		sigemptyset(&sa.sa_mask);
+
+		if (sigaction(SIGTRAP, &sa, nullptr) == -1)
+		{
+			perror("sigaction");
+			return;
+		}
 	}
 
-	strncpy((char *)HudProcessInput + 35, "\xCC\x00", 2); // insert signal int3 (breakpoint)
+	strncpy((char *)chlClient.HudProcessInput + 35, "\xCC\x00", 2); // insert signal int3 (breakpoint)
 }

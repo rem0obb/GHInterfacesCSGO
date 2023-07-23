@@ -9,17 +9,20 @@
 
 class GHooks
 {
-private:
-    // TRPHooks m_Hook;
-
-    // bool VClientHook_CreateMove(void *_this, float _flInputSampleTime, void *_cmd);
-    // bool (*VClientHook_CreateMove)(void *_this, float _flInputSampleTime, void *_cmd);
-    
 public:
+    struct ClientModeShared
+    {
+        uintptr_t CreateMove;
+    };
+
+    struct CHLClient
+    {
+        uintptr_t HudProcessInput;
+    };
+
     GHooks();
     ~GHooks();
 
     // Função de tratamento do sinal
     void Interface_VClient();
 };
-
