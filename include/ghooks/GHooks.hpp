@@ -10,6 +10,8 @@
 class GHooks
 {
 public:
+
+    // class
     struct ClientModeShared
     {
         uintptr_t CreateMove;
@@ -23,6 +25,5 @@ public:
     GHooks();
     ~GHooks();
 
-    // Função de tratamento do sinal
     void Start();
 };

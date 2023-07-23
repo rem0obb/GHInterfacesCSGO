@@ -11,6 +11,7 @@
 #include <ucontext.h>
 #include <libunwind.h>
 
+// class
 GHooks::ClientModeShared clientModeShared;
 GHooks::CHLClient chlClient;
 
