@@ -47,7 +47,7 @@ void GetPointerClientModeSharedVTABLE(int sig, siginfo_t *info, void *ucontext)
 	}
 }
 
-void GHooks::Interface_VClient()
+void GHooks::Start()
 {
 	GHInterfaces inter(CLIENT_CLIENT);
 	void *vClient = inter.CreateInterfaceFN(CLIENT_DLL_INTERFACE_VERSION);
@@ -71,7 +71,7 @@ void GHooks::Interface_VClient()
 
 		if (sigaction(SIGTRAP, &sa, nullptr) == -1)
 		{
-			perror("sigaction");
+			perror("[*] sigaction error ");
 			return;
 		}
 	}

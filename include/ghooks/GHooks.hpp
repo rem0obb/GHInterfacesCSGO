@@ -24,5 +24,5 @@ public:
     ~GHooks();
 
     // Função de tratamento do sinal
-    void Interface_VClient();
+    void Start();
 };

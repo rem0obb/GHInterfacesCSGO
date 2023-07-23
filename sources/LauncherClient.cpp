@@ -20,7 +20,7 @@ extern "C"
         sleep(TIMEOUT);
         std::cout << "[*] Instaling Hooks ..." << std::endl;
         GHooks hooks;
-        hooks.Interface_VClient();
+        hooks.Start();
     }
 
     void LauncherMain(int argc, const char **argv)
