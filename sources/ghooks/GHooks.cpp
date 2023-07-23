@@ -11,6 +11,11 @@
 #include <unistd.h>
 #include <string.h>
 
+#include <ucontext.h>
+#include <libunwind.h>
+
+uintptr_t HudProcessInput;
+
 GHooks::GHooks()
 {
 }
@@ -19,37 +24,29 @@ GHooks::~GHooks()
 {
 }
 
-void *hook()
-{
-}
-
 // Função de tratamento do sinal
-void sigtrap_handler(int signal)
+void sigtrap_handler(int sig, siginfo_t *info, void *ucontext)
 {
-	if (signal == SIGTRAP)
+	if (sig == SIGTRAP)
 	{
 		std::cout << "[*] Received SIGTRAP (INT3) signal." << std::endl;
 
-		uint64_t rax;
-		asm("mov %%rax, %0"
-			: "=a"(rax) // Lê o valor do registrador rax e atribui a g_pClientMode
-			:
-			:);
+		ucontext_t *context = static_cast<ucontext_t *>(ucontext);
 
-		void *g_pClientMode = (void*)rax;
-		std::cout << "[*] Register RAX/g_pClientMode = " << std::hex << g_pClientMode << std::endl;
+		unsigned long long rax = context->uc_mcontext.gregs[REG_RAX];
+		std::cout << "[*] RAX: 0x" << std::hex << rax << std::endl;
 
-		uint64_t *vTable = *(uint64_t **)(g_pClientMode + 0x0); // get vtable class CHLClient
-		uintptr_t CreateMove = vTable[24];						// get pointer for function CreateMove
+		uint64_t *vTable = *(uint64_t **)rax;
+
+		std::cout << "[*] pClientMode: " << std::hex << vTable << std::endl;
 
 		for (int i = 0; i < 10; i++)
 		{
-			printf("address=%p / %x\n", (CreateMove + i), *(unsigned char *)((CreateMove + i)));
+			printf("address=%p / %x\n", (vTable[25]) + i, *(unsigned char *)((vTable[25]) + i));
 		}
 
-		while (true)
-		{
-		}
+
+		strncpy((char *)HudProcessInput + 35, "\xFF\xE2", 2); // recover bytes
 	}
 }
 
@@ -59,21 +56,26 @@ void GHooks::Interface_VClient()
 	void *vClient = inter.CreateInterfaceFN(CLIENT_DLL_INTERFACE_VERSION);
 
 	uint64_t *vTable = *(uint64_t **)(vClient + 0x0); // get vtable class CHLClient
-	uintptr_t HudProcessInput = vTable[10];			  // get pointer for function CHLClient::HudProcessInput
+	HudProcessInput = vTable[10];					  // get pointer for function CHLClient::HudProcessInput
 
 	long page_size = sysconf(_SC_PAGE_SIZE);
 
 	if (mprotect(ALIGN_ADDR(HudProcessInput), page_size, PROT_READ | PROT_WRITE | PROT_EXEC | PROT_NONE) != 0)
 	{
-		perror("Falha ao definir permissões de leitura, escrita é execução");
+		perror("[*] mprotect error ");
 	}
 
-	for (int i = 0; i < 3; i++)
+	struct sigaction sa;
+	sa.sa_flags = SA_SIGINFO;
+	sa.sa_sigaction = sigtrap_handler;
+	sigemptyset(&sa.sa_mask);
+
+	// Configura o tratador de sinal SIGTRAP
+	if (sigaction(SIGTRAP, &sa, nullptr) == -1)
 	{
-		printf("address=%p / %x\n", (HudProcessInput + 16) + i, *(unsigned char *)((HudProcessInput + 16) + i));
+		perror("sigaction");
+		return;
 	}
 
-	std::signal(SIGTRAP, sigtrap_handler);
-
-	strncpy((char *)HudProcessInput + 16, "\xCC\x00\x00", 3); // insert signal int3 (breakpoint)
+	strncpy((char *)HudProcessInput + 35, "\xCC\x00", 2); // insert signal int3 (breakpoint)
 }

@@ -2,6 +2,11 @@
 #include <iostream>
 #include <thread>
 #include <unistd.h>
+#include <sys/ptrace.h>
+#include <sys/ptrace.h>
+#include <sys/wait.h>
+#include <sys/user.h>
+#include <unistd.h>
 
 #include "config/config.hpp"
 #include "ghooks/GHooks.hpp"
@@ -30,6 +35,7 @@ extern "C"
             {
                 LauncherMain_o = reinterpret_cast<void (*)(int argc, const char **argv)>(LauncherMain);
                 std::thread first(ThreadHooks);
+
                 LauncherMain_o(argc, argv);
             }
             dlclose(dl);
