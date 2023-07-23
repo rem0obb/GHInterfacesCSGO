@@ -3,14 +3,11 @@
 #include "config/config.hpp"
 
 #include <iostream>
-#include <malloc.h>
 #include <csignal>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/mman.h>
 #include <unistd.h>
 #include <string.h>
-
 #include <ucontext.h>
 #include <libunwind.h>
 
