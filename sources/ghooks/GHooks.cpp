@@ -37,7 +37,7 @@ void GetPointerClientModeSharedVTABLE(int sig, siginfo_t *info, void *ucontext)
 		unsigned long long rax = context->uc_mcontext.gregs[REG_RAX];
 		std::cout << "[*] RAX: 0x" << std::hex << rax << std::endl;
 
-		uint64_t *vTable = *(uint64_t **)rax;
+		uint64_t *vTable = *(uint64_t **)rax;  // get vtable class ClientModeShared
 
 		std::cout << "[*] pClientMode: " << std::hex << vTable << std::endl;
 
