@@ -1,7 +1,5 @@
 #pragma once
 
-#include "trpHooks/TRPHooks.hpp"
-
 #include <cstdint>
 
 #define CLIENT_DLL_INTERFACE_VERSION "VClient018" // EXPOSE_SINGLE_INTERFACE_GLOBALVAR( CHLClient, IBaseClientDLL, "VClient018", gHLClient );
@@ -10,15 +8,16 @@
 class GHooks
 {
 public:
-
     // class
     struct ClientModeShared
     {
+        uint64_t *vTable;
         uintptr_t CreateMove;
     };
 
     struct CHLClient
     {
+        uint64_t *vTable;
         uintptr_t HudProcessInput;
     };
 
@@ -26,4 +25,7 @@ public:
     ~GHooks();
 
     void Start();
+
+    ClientModeShared getClassClientModeShared();
+    CHLClient getClassCHLClient();
 };
