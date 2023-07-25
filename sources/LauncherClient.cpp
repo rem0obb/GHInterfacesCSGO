@@ -21,6 +21,7 @@ extern "C"
         hooks.Start();
 
         sleep(10);
+
         CreateMove = reinterpret_cast<bool (*)(void *_this, float flInputSampleTime, void *cmd)>(hooks.getClassClientModeShared().CreateMove);
         hooks.getClassClientModeShared().vTable[25] = (uint64_t)&CreateMoveHook;
     }
@@ -36,10 +37,12 @@ extern "C"
             if (LauncherMain)
             {
                 LauncherMain_o = reinterpret_cast<void (*)(int argc, const char **argv)>(LauncherMain);
-                std::thread first(ThreadHooks);
+                std::thread hooks_thread(ThreadHooks);
 
                 LauncherMain_o(argc, argv);
+                hooks_thread.join();
             }
+
             dlclose(dl);
         }
     }
