@@ -16,7 +16,7 @@ extern "C"
     {
         sleep(TIMEOUT); // wait csgo load is libraries
 
-        std::cout << "[*] Instaling Hooks ..." << std::endl;
+        std::cout << "[*] Installing Hooks ..." << std::endl;
         GHooks hooks;
         hooks.Start();
 
@@ -40,7 +40,6 @@ extern "C"
                 std::thread hooks_thread(ThreadHooks);
 
                 LauncherMain_o(argc, argv);
-                hooks_thread.join();
             }
 
             dlclose(dl);

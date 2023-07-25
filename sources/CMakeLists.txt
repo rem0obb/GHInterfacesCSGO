@@ -25,5 +25,3 @@ file(GLOB_RECURSE SOURCES
 target_sources(launcher_client PRIVATE 
 		${SOURCES}
 )
-
-target_link_libraries(launcher_client PRIVATE )
