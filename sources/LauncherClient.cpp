@@ -11,8 +11,8 @@
 extern "C"
 {
     static void (*LauncherMain_o)(int argc, const char **argv);
-    static bool (*CreateMove)(void *_this, float flInputSampleTime, CUserCmd *cmd);
-    static bool CreateMoveHook(void *_this, float flInputSampleTime, CUserCmd *cmd);
+    static bool (*CreateMove)(void *_this, float flInputSampleTime, CSGO::CUserCmd *cmd);
+    static bool CreateMoveHook(void *_this, float flInputSampleTime, CSGO::CUserCmd *cmd);
 
     GHooks hooks;
 
@@ -24,13 +24,15 @@ extern "C"
         hooks.Start();
 
         sleep(10);
-
-        // Hooks
-        CreateMove = reinterpret_cast<bool (*)(void *_this, float flInputSampleTime, CUserCmd *cmd)>(hooks.getClassClientModeShared().CreateMove);
-        hooks.getClassClientModeShared().vTable[25] = (uint64_t)&CreateMoveHook;
         
-        // call only at the end of the inject hook
-        hooks.ReadjustPages();
+        // Hooks
+        VMTHook vmt_hook_client(hooks.getClassClientModeShared().vTable, hooks.getClassClientModeShared().vTableSize);
+
+        CreateMove = reinterpret_cast<bool (*)(void *_this, float flInputSampleTime, CSGO::CUserCmd *cmd)>(hooks.getClassClientModeShared().vTable[25]);
+
+        vmt_hook_client.VMTInstallHook(25, (uint64_t)&CreateMoveHook);
+
+        *(uint64_t *)hooks.getClassClientModeShared().g_pClientMode = (uint64_t)vmt_hook_client.VMTGetVTableCopy();
     }
 
     void LauncherMain(int argc, const char **argv)
@@ -50,13 +52,14 @@ extern "C"
             }
 
             dlclose(dl);
-        }else 
+        }
+        else
         {
             throw std::runtime_error("[*] Erro in open library : " + std::string(BACKUP_LAUNCHER));
         }
     }
 
-    bool CreateMoveHook(void *_this, float flInputSampleTime, CUserCmd *cmd)
+    bool CreateMoveHook(void *_this, float flInputSampleTime, CSGO::CUserCmd *cmd)
     {
         std::cout << "[*] Hooked Function CreateMove" << std::endl
                   << "Cmd.buttons = " << cmd->buttons << std::endl
