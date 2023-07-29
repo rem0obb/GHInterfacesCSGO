@@ -38,7 +38,7 @@ void GHooks::GetClientModeSharedVTABLE(int sig, siginfo_t *info, void *ucontext)
 		ucontext_t *context = static_cast<ucontext_t *>(ucontext);
 
 		unsigned long long rax = context->uc_mcontext.gregs[REG_RAX];
-		std::cout << "[*] RAX: 0x" << std::hex << rax << std::endl;
+		std::cout << "[*] RAX [0x" << std::hex << rax << "]" << std::endl;
 
 		clientModeShared.vTable = *(uint64_t **)rax; // get vtable class ClientModeShared
 		clientModeShared.g_pClientMode = (uint64_t *)rax;
@@ -53,7 +53,7 @@ void GHooks::GetClientModeSharedVTABLE(int sig, siginfo_t *info, void *ucontext)
 		// adjustment permission in memory for read and exec
 		if (mprotect(ALIGN_ADDR(chlClient.vTable[10]), m_page_size, PROT_READ | PROT_EXEC) != 0)
 		{
-			perror("[*] mprotect error ");
+			perror("[!] mprotect error ");
 		}
 	}
 }
@@ -79,7 +79,7 @@ void GHooks::Start()
 
 		if (sigaction(SIGTRAP, &sa, nullptr) == -1)
 		{
-			perror("[*] sigaction error ");
+			perror("[!] sigaction error ");
 			return;
 		}
 	}
@@ -87,7 +87,7 @@ void GHooks::Start()
 	// adjustment permission in memory for write
 	if (mprotect(ALIGN_ADDR(chlClient.vTable[10]), m_page_size, PROT_READ | PROT_WRITE | PROT_EXEC | PROT_NONE) != 0)
 	{
-		perror("[*] mprotect error ");
+		perror("[!] mprotect error ");
 	}
 	// insert signal int3 (breakpoint)
 	strncpy((char *)chlClient.vTable[10] + 35, "\xCC\x00", 2);

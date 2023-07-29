@@ -2,7 +2,7 @@
 #include <iostream>
 #include <thread>
 #include <unistd.h>
-
+#include <sys/mman.h>
 #include "config/config.hpp"
 #include "ghooks/GHooks.hpp"
 #include "internals/usercmd.hpp"
@@ -12,7 +12,15 @@ extern "C"
 {
     static void (*LauncherMain_o)(int argc, const char **argv);
     static bool (*CreateMove)(void *_this, float flInputSampleTime, CSGO::CUserCmd *cmd);
-    static bool CreateMoveHook(void *_this, float flInputSampleTime, CSGO::CUserCmd *cmd);
+    bool CreateMoveHook(void *_this, float flInputSampleTime, CSGO::CUserCmd *cmd)
+    {
+        std::cout << "[*] Hooked Function CreateMove" << std::endl
+                  << "Cmd.buttons = " << cmd->buttons << std::endl
+                  << "Cmd.mousedy = " << cmd->mousedy << std::endl
+                  << "Cmd.mousedx = " << cmd->mousedx << std::endl;
+
+        return CreateMove(_this, flInputSampleTime, cmd);
+    }
 
     GHooks hooks;
 
@@ -20,12 +28,14 @@ extern "C"
     {
         sleep(TIMEOUT); // wait csgo load is libraries
 
-        std::cout << "[*] Installing Hooks ..." << std::endl;
+        std::cout << "[*] Starting Hooks" << std::endl;
         hooks.Start();
 
         sleep(10);
-        
+
         // Hooks
+        std::cout << "[*] Hooking Functions ..." << std::endl;
+
         VMTHook vmt_hook_client(hooks.getClassClientModeShared().vTable, hooks.getClassClientModeShared().vTableSize);
 
         CreateMove = reinterpret_cast<bool (*)(void *_this, float flInputSampleTime, CSGO::CUserCmd *cmd)>(hooks.getClassClientModeShared().vTable[25]);
@@ -55,17 +65,7 @@ extern "C"
         }
         else
         {
-            throw std::runtime_error("[*] Erro in open library : " + std::string(BACKUP_LAUNCHER));
+            throw std::runtime_error("[!] Erro in open library : " + std::string(BACKUP_LAUNCHER));
         }
-    }
-
-    bool CreateMoveHook(void *_this, float flInputSampleTime, CSGO::CUserCmd *cmd)
-    {
-        std::cout << "[*] Hooked Function CreateMove" << std::endl
-                  << "Cmd.buttons = " << cmd->buttons << std::endl
-                  << "Cmd.mousedy = " << cmd->mousedy << std::endl
-                  << "Cmd.mousedx = " << cmd->mousedx << std::endl;
-
-        return CreateMove(_this, flInputSampleTime, cmd);
     }
 }

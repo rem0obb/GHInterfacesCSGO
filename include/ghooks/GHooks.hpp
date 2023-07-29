@@ -5,7 +5,7 @@
 #include "vmt/VMThook.hpp"
 
 #define CLIENT_DLL_INTERFACE_VERSION "VClient018" // EXPOSE_SINGLE_INTERFACE_GLOBALVAR( CHLClient, IBaseClientDLL, "VClient018", gHLClient );
-#define ALIGN_ADDR(addr) ((void *)((size_t)(addr) & ~(m_page_size - 1)))
+#define ALIGN_ADDR(addr) ((void *)((size_t)(addr) & ~(sysconf(_SC_PAGE_SIZE) - 1)))
 
 class GHooks
 {

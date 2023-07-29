@@ -1,25 +1,39 @@
 #include "vmt/VMThook.hpp"
-#include <stdio.h>
 
-VMTHook::VMTHook(uint64_t *_vtable_address, int _size) : m_vtable(_vtable_address)
+#include <stdexcept>
+#include <iostream>
+#include <sys/mman.h>
+#include <unistd.h>
+
+VMTHook::VMTHook(uint64_t *_vtable_address, int _size) : m_vtable(_vtable_address),
+                                                         m_vtable_size(_size),
+                                                         m_page_size(sysconf(_SC_PAGE_SIZE))
 {
     m_vtable_copy = new uint64_t[_size]; // first allocate array of row pointer
 
     Memcpy(m_vtable_copy, _vtable_address, _size);
+
+    std::cout << "[*] VTable [" << _vtable_address << "] successfully copied" << std::endl;
 }
 
 VMTHook::~VMTHook()
 {
-    delete m_vtable_copy;
+
 }
 
-bool VMTHook::VMTInstallHook(int _index_function, uintptr_t address_function_hook)
+void VMTHook::VMTInstallHook(uint _index_function, uintptr_t address_function_hook)
 {
+    if (_index_function > m_vtable_size)
+        throw std::runtime_error("[!] Index exceeded VTable");
+
     m_vtable_copy[_index_function] = address_function_hook;
 }
 
-void VMTHook::VMTUninstall(int _index_function)
+void VMTHook::VMTUninstall(uint _index_function)
 {
+    if (_index_function > m_vtable_size)
+        throw std::runtime_error("[!] Index exceeded VTable");
+
     m_vtable_copy[_index_function] = m_vtable[_index_function];
 }
 
