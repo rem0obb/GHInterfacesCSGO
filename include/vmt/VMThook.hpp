@@ -3,8 +3,6 @@
 #include <stdint.h>
 #include <cstddef>
 
-#define ALIGN_ADDR(addr) ((void *)((size_t)(addr) & ~(m_page_size - 1)))
-
 class VMTHook
 {
 public:
@@ -19,7 +17,6 @@ private:
     uint64_t *m_vtable;
     uint64_t *m_vtable_copy;
     size_t m_vtable_size;
-    size_t m_page_size;
 
     inline void Memcpy(uint64_t *_dst, uint64_t *_src, int _size);
 };

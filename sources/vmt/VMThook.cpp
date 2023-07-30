@@ -6,8 +6,8 @@
 #include <unistd.h>
 
 VMTHook::VMTHook(uint64_t *_vtable_address, int _size) : m_vtable(_vtable_address),
-                                                         m_vtable_size(_size),
-                                                         m_page_size(sysconf(_SC_PAGE_SIZE))
+                                                         m_vtable_size(_size)
+
 {
     m_vtable_copy = new uint64_t[_size]; // first allocate array of row pointer
 
@@ -18,7 +18,6 @@ VMTHook::VMTHook(uint64_t *_vtable_address, int _size) : m_vtable(_vtable_addres
 
 VMTHook::~VMTHook()
 {
-
 }
 
 void VMTHook::VMTInstallHook(uint _index_function, uintptr_t address_function_hook)

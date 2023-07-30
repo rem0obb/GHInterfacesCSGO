@@ -10,7 +10,6 @@
 
 extern "C"
 {
-    static void (*LauncherMain_o)(int argc, const char **argv);
     static bool (*CreateMove)(void *_this, float flInputSampleTime, CSGO::CUserCmd *cmd);
     bool CreateMoveHook(void *_this, float flInputSampleTime, CSGO::CUserCmd *cmd)
     {
@@ -22,19 +21,16 @@ extern "C"
         return CreateMove(_this, flInputSampleTime, cmd);
     }
 
-    GHooks hooks;
-
-    void ThreadHooks()
+    void ClientModeSharedHook()
     {
-        sleep(TIMEOUT); // wait csgo load is libraries
+        GHooks hooks;
 
-        std::cout << "[*] Starting Hooks" << std::endl;
         hooks.Start();
 
         sleep(10);
 
         // Hooks
-        std::cout << "[*] Hooking Functions ..." << std::endl;
+        std::cout << "[*] Hooking Methods Class ClientModeShared" << std::endl;
 
         VMTHook vmt_hook_client(hooks.getClassClientModeShared().vTable, hooks.getClassClientModeShared().vTableSize);
 
@@ -43,6 +39,15 @@ extern "C"
         vmt_hook_client.VMTInstallHook(25, (uint64_t)&CreateMoveHook);
 
         *(uint64_t *)hooks.getClassClientModeShared().g_pClientMode = (uint64_t)vmt_hook_client.VMTGetVTableCopy();
+    }
+
+    void ThreadHooks()
+    {
+        sleep(TIMEOUT); // wait csgo load is libraries
+
+        std::cout << "[*] Starting Hooks" << std::endl;
+
+        ClientModeSharedHook();
     }
 
     void LauncherMain(int argc, const char **argv)
@@ -55,7 +60,7 @@ extern "C"
             void *LauncherMain = dlsym(dl, "LauncherMain");
             if (LauncherMain)
             {
-                LauncherMain_o = reinterpret_cast<void (*)(int argc, const char **argv)>(LauncherMain);
+                static void (*LauncherMain_o)(int argc, const char **argv) = reinterpret_cast<void (*)(int argc, const char **argv)>(LauncherMain);
                 std::thread hooks_thread(ThreadHooks);
 
                 LauncherMain_o(argc, argv);
