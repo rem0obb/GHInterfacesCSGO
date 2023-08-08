@@ -61,7 +61,9 @@ void GHooks::GetClientModeSharedVTABLE(int sig, siginfo_t *info, void *ucontext)
 void GHooks::Start()
 {
 	GHInterfaces inter(CLIENT_CLIENT);
+
 	void *vClient = inter.CreateInterfaceFN(CLIENT_DLL_INTERFACE_VERSION);
+	ClientEntityList = reinterpret_cast<CSGO::IClientEntityList*>(inter.CreateInterfaceFN(VCLIENTENTITYLIST_INTERFACE_VERSION));
 
 	chlClient.vTable = *(uint64_t **)(vClient + 0x0); // get vtable class CHLClient
 	chlClient.vTableSize = 0;
@@ -101,4 +103,9 @@ GHooks::ClientModeShared GHooks::getClassClientModeShared()
 GHooks::CHLClient GHooks::getClassCHLClient()
 {
 	return chlClient;
+}
+
+CSGO::IClientEntityList *GHooks::getClassClientEntityList()
+{
+	return ClientEntityList;
 }

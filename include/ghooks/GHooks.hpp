@@ -3,8 +3,10 @@
 #include <cstdint>
 #include <csignal>
 #include "vmt/VMThook.hpp"
+#include "internals/icliententitylist.hpp"
 
 #define CLIENT_DLL_INTERFACE_VERSION "VClient018" // EXPOSE_SINGLE_INTERFACE_GLOBALVAR( CHLClient, IBaseClientDLL, "VClient018", gHLClient );
+#define VCLIENTENTITYLIST_INTERFACE_VERSION	"VClientEntityList003"
 #define ALIGN_ADDR(addr) ((void *)((size_t)(addr) & ~(sysconf(_SC_PAGE_SIZE) - 1)))
 
 class GHooks
@@ -29,6 +31,8 @@ public:
         size_t vTableSize;
     };
 
+    CSGO::IClientEntityList *ClientEntityList;
+
     GHooks();
     ~GHooks();
 
@@ -37,4 +41,5 @@ public:
 
     ClientModeShared getClassClientModeShared();
     CHLClient getClassCHLClient();
+    CSGO::IClientEntityList* getClassClientEntityList();
 };

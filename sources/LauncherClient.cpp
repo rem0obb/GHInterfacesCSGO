@@ -6,17 +6,25 @@
 #include "config/config.hpp"
 #include "ghooks/GHooks.hpp"
 #include "internals/usercmd.hpp"
-#include "internals/in_buttons.hpp"
+#include "internals/icliententitylist.hpp"
 
 extern "C"
 {
+
+    CSGO::IClientEntityList *ClientEntityList;
+
     static bool (*CreateMove)(void *_this, float flInputSampleTime, CSGO::CUserCmd *cmd);
     bool CreateMoveHook(void *_this, float flInputSampleTime, CSGO::CUserCmd *cmd)
     {
         std::cout << "[*] Hooked Function CreateMove" << std::endl
-                  << "Cmd.buttons = " << cmd->buttons << std::endl
-                  << "Cmd.mousedy = " << cmd->mousedy << std::endl
-                  << "Cmd.mousedx = " << cmd->mousedx << std::endl;
+                  << "Cmd.buttons = " << cmd->buttons << std::endl;
+
+        for (int i = 0; i < 64; i++)
+        {
+            auto player = ClientEntityList->GetClientEntity(i);
+            if (player)
+                std::cout << "Player " << std::dec << i << std::endl;
+        }
 
         return CreateMove(_this, flInputSampleTime, cmd);
     }
@@ -33,6 +41,8 @@ extern "C"
         std::cout << "[*] Hooking Methods Class ClientModeShared" << std::endl;
 
         VMTHook vmt_hook_client(hooks.getClassClientModeShared().vTable, hooks.getClassClientModeShared().vTableSize);
+
+        ClientEntityList = hooks.getClassClientEntityList();
 
         CreateMove = reinterpret_cast<bool (*)(void *_this, float flInputSampleTime, CSGO::CUserCmd *cmd)>(hooks.getClassClientModeShared().vTable[25]);
 
