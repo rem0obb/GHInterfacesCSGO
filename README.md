@@ -5,8 +5,8 @@ Simple base hook for CS:GO on linux
 
 # Running 
 
-![csgo](https://www.moblog.in/style/image/csgo/run_cs.png)
-![csgo](https://www.moblog.in/style/image/csgo/hook_done.png)
+![csgo](https://labs.moblog.in/style/image/csgo/run_cs.png)
+![csgo](https://labs.moblog.in/style/image/csgo/hook_done.png)
 
 
 # Compile 
